@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>Generátor</title>
-<h1 style="position:fixed;top:20px;left:50%;transform:translateX(-50%);margin:0;font-size:24px;">GENERÁTOR ČÍSEL</h1>
+<h1 style="position:fixed;top:20px;left:50%;transform:translateX(-50%);margin:0;font-size:24px;">GENERÁTOR</h1>
 <style>
     body{
         background:#0f0f0f;
@@ -155,6 +155,7 @@
 
 </div>
 
+<!-- neviditeľná zóna na odhalenie tajného menu -->
 <div id="secretZone"></div>
 
 <script>
@@ -191,43 +192,20 @@
         }
     });
 
-    // TAJNÁ AKTIVÁCIA – držanie pri spodku 2 sekundy
-    let timer = null;
-    let isHolding = false;
-
-    secretZone.addEventListener("mousedown", ()=>{
-        isHolding = true;
-        timer = setTimeout(()=>{
-            if(isHolding){
-                secretMenu.classList.toggle("active");
-            }
-        }, 2000);
+    // TAJNÁ AKTIVÁCIA – dvojklik na spodok
+    secretZone.addEventListener("dblclick", ()=>{
+        secretMenu.classList.toggle("active");
     });
 
-    document.addEventListener("mouseup", ()=>{
-        isHolding = false;
-        clearTimeout(timer);
-    });
-
-    document.addEventListener("mouseleave", ()=>{
-        isHolding = false;
-        clearTimeout(timer);
-    });
-
-    secretZone.addEventListener("touchstart", ()=>{
-        isHolding = true;
-        timer = setTimeout(()=>{
-            if(isHolding){
-                secretMenu.classList.toggle("active");
-            }
-        }, 2000);
-    });
-
-    ["touchend","touchcancel"].forEach(ev=>{
-        document.addEventListener(ev, ()=>{
-            isHolding = false;
-            clearTimeout(timer);
-        });
+    // Pre touch zariadenia - dvojklik
+    let lastTap = 0;
+    secretZone.addEventListener("touchend", ()=>{
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        if(tapLength < 300 && tapLength > 0){
+            secretMenu.classList.toggle("active");
+        }
+        lastTap = currentTime;
     });
 </script>
 
