@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<title>Generátor</title>
+<h1 style="position:fixed;top:20px;left:50%;transform:translateX(-50%);margin:0;font-size:24px;">GENERÁTOR ČÍSEL</h1>
+<style>
+    body{
+        background:#0f0f0f;
+        color:white;
+        font-family:Arial;
+        margin:0;
+        height:100vh;
+        display:flex;
+        justify-content:center;
+        align-items:center;
+    }
+
+    .box{
+        width:260px;
+        padding:20px;
+        background:#1c1c1c;
+        border-radius:12px;
+        border:1px solid #333;
+        position:relative;
+    }
+
+    input{
+        width:100%;
+        padding:10px;
+        margin:6px 0;
+        border-radius:6px;
+        border:none;
+        background:#2c2c2c;
+        color:white;
+        box-sizing:border-box;
+    }
+
+    /* hlavné "jednotné" tlačidlo */
+    .bigBtn{
+        width:100%;
+        height:60px;
+        background:#3a3a3a;
+        color:white;
+        font-size:20px;
+        font-weight:bold;
+        border-radius:10px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        user-select:none;
+        cursor:pointer;
+        margin-top:10px;
+        border:none;
+    }
+    .bigBtn:active{
+        background:#555;
+    }
+
+    /* výstup */
+    .output{
+        margin-top:15px;
+        background:#00000055;
+        padding:15px;
+        border-radius:8px;
+        text-align:center;
+        font-size:28px;
+        font-weight:bold;
+        border:1px solid #333;
+    }
+
+    /* TAJNÉ MENU */
+    #secretMenu{
+        display:none;
+        margin-top:10px;
+        padding:10px;
+        background:#222;
+        border-radius:8px;
+        border:1px solid #555;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    #secretMenu.active{
+        display:block;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .secret-label{
+        font-size:12px;
+        color:#888;
+        margin-bottom:8px;
+        display:block;
+    }
+
+    #secret1, #secret2{
+        width:100%;
+        padding:10px;
+        margin:6px 0;
+        border-radius:6px;
+        border:none;
+        background:#2c2c2c;
+        color:white;
+        box-sizing:border-box;
+    }
+
+    /* TAJNÁ DOTYKOVÁ ZÓNA NA SPODKU */
+    #secretZone{
+        position:fixed;
+        bottom:0;
+        left:0;
+        width:100%;
+        height:30px;
+        opacity:0;
+        cursor:pointer;
+    }
+
+    .hint{
+        font-size:10px;
+        color:#555;
+        margin-top:5px;
+        text-align:center;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+    <input id="min" type="number" placeholder="Od (min)" value="1">
+    <input id="max" type="number" placeholder="Do (max)" value="100">
+
+    <!-- TAJNÉ MENU -->
+    <div id="secretMenu">
+        <span class="secret-label">🔮 TAJNÉ ČÍSLO 1:</span>
+        <input id="secret1" type="number" placeholder="Prvé číslo">
+        <span class="secret-label">🔮 TAJNÉ ČÍSLO 2:</span>
+        <input id="secret2" type="number" placeholder="Druhé číslo">
+    </div>
+
+    <!-- hlavné tlačidlo -->
+    <button class="bigBtn" id="mainBtn">GENERUJ</button>
+
+    <div class="output" id="out">---</div>
+
+</div>
+
+<div id="secretZone"></div>
+
+<script>
+    const out = document.getElementById("out");
+    const mainBtn = document.getElementById("mainBtn");
+    const secretMenu = document.getElementById("secretMenu");
+    const secret1El = document.getElementById("secret1");
+    const secret2El = document.getElementById("secret2");
+    const secretZone = document.getElementById("secretZone");
+
+    let currentSecret = 0; // 0 = secret1, 1 = secret2
+
+    function random(min,max){
+        return Math.floor(Math.random()*(max-min+1))+min;
+    }
+
+    // hlavné tlačidlo – delenie na ľavú/pravú časť
+    mainBtn.addEventListener("click", (e)=>{
+        const rect = mainBtn.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+
+        const min = Number(document.getElementById("min").value);
+        const max = Number(document.getElementById("max").value);
+
+        // ĽAVÁ polovica -> striedaj tajné čísla
+        if(clickX < rect.width/2){
+            const secret = currentSecret === 0 ? secret1El.value : secret2El.value;
+            out.textContent = secret || "---";
+            currentSecret = currentSecret === 0 ? 1 : 0; // prepni na ďalšie číslo
+        }
+        // PRAVÁ polovica -> náhodné číslo z rozsahu
+        else{
+            out.textContent = random(min,max);
+        }
+    });
+
+    // TAJNÁ AKTIVÁCIA – držanie pri spodku 2 sekundy
+    let timer = null;
+    let isHolding = false;
+
+    secretZone.addEventListener("mousedown", ()=>{
+        isHolding = true;
+        timer = setTimeout(()=>{
+            if(isHolding){
+                secretMenu.classList.toggle("active");
+            }
+        }, 2000);
+    });
+
+    document.addEventListener("mouseup", ()=>{
+        isHolding = false;
+        clearTimeout(timer);
+    });
+
+    document.addEventListener("mouseleave", ()=>{
+        isHolding = false;
+        clearTimeout(timer);
+    });
+
+    secretZone.addEventListener("touchstart", ()=>{
+        isHolding = true;
+        timer = setTimeout(()=>{
+            if(isHolding){
+                secretMenu.classList.toggle("active");
+            }
+        }, 2000);
+    });
+
+    ["touchend","touchcancel"].forEach(ev=>{
+        document.addEventListener(ev, ()=>{
+            isHolding = false;
+            clearTimeout(timer);
+        });
+    });
+</script>
+
+</body>
+</html>
